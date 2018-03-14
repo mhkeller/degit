@@ -24,7 +24,7 @@ class Degit extends EventEmitter {
 
 		this.repo = parse(src);
 
-		this.directiveActions = {
+		this.actions = {
 			clone: async (dest, action) => {
         const opts = Object.assign({force: true}, {cache: action.cache, verbose: action.verbose});
 				const d = degit(action.src, opts);
@@ -45,6 +45,14 @@ class Degit extends EventEmitter {
 			},
 			remove: this.remove.bind(this)
 		};
+	}
+
+	async doActions(actions, dest = '.', dir = path.join(base, 'local', path.basename(path.resolve('./')))) {
+		stashFiles(dest, dir);
+		for (const d of actions) {
+			await this.actions[d.action](dest, d);
+		}
+		unstashFiles(dest, dir);
 	}
 
 	async clone(dest) {
@@ -117,14 +125,9 @@ class Degit extends EventEmitter {
 			dest
 		});
 
-		const directives = tryRequire(path.resolve(dest, degitConfigName), {clearCache: true}) || false;
-		if (directives) {
-			stashFiles(dir, dest);
-			for (const d of directives) {
-				// TODO, can this be a loop with an index to pass for better error messages?
-				await this.directiveActions[d.action](dest, d);
-			}
-			unstashFiles(dir, dest);
+		const actions = tryRequire(path.resolve(dest, degitConfigName), {clearCache: true}) || false;
+		if (actions) {
+			await this.doActions(actions, dest, dir);
 		}
 	}
 
@@ -238,6 +241,7 @@ class Degit extends EventEmitter {
 const supported = new Set(['github', 'gitlab', 'bitbucket']);
 
 function parse(src) {
+	if (!src) return '';
 	const match = /^(?:https:\/\/([^/]+)\/|git@([^/]+):|([^/]+):)?([^/\s]+)\/([^/\s#]+)(?:#(.+))?/.exec(src);
 	if (!match) {
 		throw new DegitError(`could not parse ${src}`, {

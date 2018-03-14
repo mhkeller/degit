@@ -70,7 +70,7 @@ export function fetch(url, dest) {
 	});
 }
 
-export function stashFiles(dir, dest) {
+export function stashFiles(dest, dir) {
 	const tmpDir = path.join(dir, tmpDirName);
 	console.log('tmpDir', tmpDir)
 	rimrafSync(tmpDir);
@@ -89,7 +89,7 @@ export function stashFiles(dir, dest) {
 	});
 }
 
-export function unstashFiles(dir, dest) {
+export function unstashFiles(dest, dir) {
 	const tmpDir = path.join(dir, tmpDirName);
 	fs.readdirSync(tmpDir).forEach(filename => {
 		const tmpFile = path.join(tmpDir, filename);

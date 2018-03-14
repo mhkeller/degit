@@ -118,8 +118,18 @@ describe('degit', () => {
 	});
 
 	describe('api', () => {
-		it('is usable from node scripts', async () => {
+
+		it('clone is usable from node scripts', async () => {
 			await degit('Rich-Harris/degit-test-repo', { force: true }).clone('.tmp/test-repo');
+
+			compare(`.tmp/test-repo`, {
+				'file.txt': 'hello from github!'
+			});
+		});
+		it('doActions is usable from node scripts', async () => {
+			await degit().doActions([
+				{action: 'clone', src: 'mhkeller/degit-test-repo-compose'}
+			], '.tmp/test-repo');
 
 			compare(`.tmp/test-repo`, {
 				'file.txt': 'hello from github!'
